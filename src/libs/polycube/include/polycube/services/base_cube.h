@@ -73,7 +73,7 @@ class BaseCube {
 
   virtual void datapath_log_msg(const LogMsg *msg);
 
-  void set_log_level(LogLevel level);
+  void set_log_level(LogLevel level, bool update_datapath = true);
   LogLevel get_log_level() const;
 
   const Guid &get_uuid() const;

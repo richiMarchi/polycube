@@ -90,9 +90,11 @@ void BaseCube::datapath_log_msg(const LogMsg *msg) {
   }
 }
 
-void BaseCube::set_log_level(LogLevel level) {
+void BaseCube::set_log_level(LogLevel level, bool update_datapath) {
   logger()->set_level(logLevelToSPDLog(level));
-  return cube_->set_log_level(level);
+  if (update_datapath) {
+    cube_->set_log_level(level);
+  }
 }
 
 LogLevel BaseCube::get_log_level() const {
