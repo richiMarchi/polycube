@@ -55,7 +55,7 @@ class Service : public ParentResource, public Body::Service {
   Response CompletionService(HelpType type);
 
   virtual Response ReadHelp() = 0;
-
+  
   void CreateReplaceUpdate(const std::string &name, nlohmann::json &body,
                            ResponseWriter response, bool replace,
                            bool initialization);
@@ -65,10 +65,6 @@ class Service : public ParentResource, public Body::Service {
   Validators::InSetValidator path_param_;
 
   nlohmann::json getServiceKeys() const;
-
-  std::vector<Response> RequestValidate(
-      const Pistache::Rest::Request &request,
-      const std::string &caller_name) const final;
 
   void post(const Request &request, ResponseWriter response) final;
 
