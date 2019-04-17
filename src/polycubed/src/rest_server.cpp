@@ -171,6 +171,9 @@ void RestServer::setup_routes() {
   router_->get(base + std::string("/cubes/:cubeName"),
                bind(&RestServer::get_cube, this));
 
+  router_->post(base + std::string("/cubes"),
+                bind(&RestServer::post_cubes, this));
+
   router_->options(base + std::string("/cubes"),
                    bind(&RestServer::cubes_help, this));
 
@@ -422,6 +425,21 @@ void RestServer::get_cube(const Pistache::Rest::Request &request,
     auto name = request.param(":cubeName").as<std::string>();
     std::string retJsonStr = core.get_cube(name);
     response.send(Pistache::Http::Code::Ok, retJsonStr);
+  } catch (const std::runtime_error &e) {
+    logger->error("{0}", e.what());
+    response.send(Pistache::Http::Code::Bad_Request, e.what());
+  }
+}
+
+void RestServer::post_cubes(const Pistache::Rest::Request &request,
+                               Pistache::Http::ResponseWriter response) {
+  logRequest(request);
+  try {
+    json j = json::parse(request.body());
+    logJson(j);
+
+    //TODO: Topology parsing.
+
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
     response.send(Pistache::Http::Code::Bad_Request, e.what());
