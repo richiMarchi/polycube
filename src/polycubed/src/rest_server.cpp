@@ -438,8 +438,19 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
     json j = json::parse(request.body());
     logJson(j);
 
-    //TODO: Topology parsing.
-
+    for (auto &it : j) {
+      if (it.count("ports") != 0) {
+        for (auto &it2 : it["ports"]) {
+          std::string command("sudo ip link add ");
+          command.append(it2["peer"]);
+          command.append(" type veth && sudo ip link set dev ");
+          command.append(it2["peer"]);
+          command.append(" up");
+          system(command.c_str());
+        }
+        //TODO: Cubes loading.
+      }
+    }
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
     response.send(Pistache::Http::Code::Bad_Request, e.what());
