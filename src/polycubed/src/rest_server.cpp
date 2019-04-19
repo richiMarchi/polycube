@@ -455,7 +455,9 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
         }
       }
       //TODO: Cubes loading.
-      
+      core.get_service_controller(it["service"]).get_management_interface()->get_service()
+              ->WriteValue(it["name"], it, ListKeyValues{}, Rest::Resources::Endpoint::Operation::kCreate);
+      logger->debug(".:: POST WriteValue ::.");
       response.send(Pistache::Http::Code::Ok);
     }
   } catch (const std::runtime_error &e) {
