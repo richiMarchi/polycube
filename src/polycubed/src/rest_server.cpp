@@ -437,12 +437,9 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
   try {
     json j = json::parse(request.body());
     logJson(j);
-    logger->debug(j.dump());
     for (auto &it : j) {
-      logger->debug(".:: CUBE ::.\n" + it.dump());
-      core.get_service_controller(it["service"]).get_management_interface()->get_service()
+      core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
         ->CreateReplaceUpdate(it["name"], it, response.clone(), false, true);
-      logger->debug(".:: POST WriteValue ::.");
       response.send(Pistache::Http::Code::Ok);
     }
   } catch (const std::runtime_error &e) {
