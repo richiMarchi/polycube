@@ -440,21 +440,6 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
     logger->debug(j.dump());
     for (auto &it : j) {
       logger->debug(".:: CUBE ::.\n" + it.dump());
-      if (it.count("ports") != 0) {
-          logger->debug("3");
-        for (auto &it2 : it["ports"]) {
-          logger->debug(".:: PRE COMMAND::.\n" + it2.dump());
-          std::string command("sudo ip link add "
-              + std::string(it2["peer"])
-              + " type veth && sudo ip link set dev "
-              + std::string(it2["peer"])
-              + " up");
-          logger->debug(".:: COMMAND: ::.\n" + command);
-          system(command.c_str());
-          logger->debug(".:: POST COMMAND ::.");
-        }
-      }
-      //TODO: Cubes loading.
       core.get_service_controller(it["service"]).get_management_interface()->get_service()
               ->WriteValue(it["name"], it, ListKeyValues{}, Rest::Resources::Endpoint::Operation::kCreate);
       logger->debug(".:: POST WriteValue ::.");
