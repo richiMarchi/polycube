@@ -55,14 +55,14 @@ class Service : public ParentResource, public Body::Service {
   Response CompletionService(HelpType type);
 
   virtual Response ReadHelp() = 0;
-  
+
   void CreateReplaceUpdate(const std::string &name, nlohmann::json &body,
                            ResponseWriter response, bool replace,
                            bool initialization);
 
  private:
   const std::string body_rest_endpoint_;
-  Validators::InSetValidator path_param_;
+  Validators::InSetValidator cube_names_;
 
   nlohmann::json getServiceKeys() const;
 
