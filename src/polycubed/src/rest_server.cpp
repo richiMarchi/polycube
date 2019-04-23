@@ -441,7 +441,7 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
     for (auto &it : j) {
       logger->debug(".:: CUBE ::.\n" + it.dump());
       core.get_service_controller(it["service"]).get_management_interface()->get_service()
-              ->WriteValue(it["name"], it, ListKeyValues{}, Rest::Resources::Endpoint::Operation::kCreate);
+        ->CreateReplaceUpdate(it["name"], it, response.clone(), false, true);
       logger->debug(".:: POST WriteValue ::.");
       response.send(Pistache::Http::Code::Ok);
     }
