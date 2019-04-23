@@ -440,8 +440,8 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
     for (auto &it : j) {
       core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
         ->CreateReplaceUpdate(it["name"], it, response.clone(), false, true);
-      response.send(Pistache::Http::Code::Ok);
     }
+    response.send(Pistache::Http::Code::Ok);
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
     response.send(Pistache::Http::Code::Bad_Request, e.what());
