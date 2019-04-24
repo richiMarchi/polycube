@@ -138,6 +138,33 @@ func FillAliases() {
 	}
 	Aliases = append(Aliases, cubes_alias)
 
+	//cubes load -> load cubes from YAML file
+	cubes_load_alias := Alias {
+		match: func(args *cliargs.CLIArgs) (bool, error) {
+
+			math := &cliargs.CLIArgs {
+				Command: cliargs.LoadCommand,
+				PathArgs: []string{CubesCommandStr},
+			}
+
+			if args.Equals(math) {
+				if len(args.PathArgs) != 2 || len(args.BodyArgs) != 0 {
+					return false, fmt.Errorf("Bad syntax, usage: cubes load <my_topology>.yaml")
+				} else {
+					return true, nil
+				}
+			}
+			return false, nil
+		},
+		transform: func(args *cliargs.CLIArgs) bool {
+			filename := args.PathArgs[1]
+			args.PathArgs[1] = ""
+			//TODO: Parse YAML into JSON
+			return false
+		},
+	}
+	Aliases = append(Aliases, cubes_load_alias)
+
 	// topology -> topology show -verbose -hide=uuid
 	topology_alias := Alias {
 		match: func(args *cliargs.CLIArgs) (bool, error) {
