@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"github.com/ghodss/yaml"
 	//"reflect"
 	"github.com/polycube-network/polycube/src/polycubectl/cliargs"
 )
@@ -142,24 +144,29 @@ func FillAliases() {
 	cubes_load_alias := Alias {
 		match: func(args *cliargs.CLIArgs) (bool, error) {
 
-			math := &cliargs.CLIArgs {
-				Command: cliargs.LoadCommand,
-				PathArgs: []string{CubesCommandStr},
-			}
-
-			if args.Equals(math) {
-				if len(args.PathArgs) != 2 || len(args.BodyArgs) != 0 {
-					return false, fmt.Errorf("Bad syntax, usage: cubes load <my_topology>.yaml")
-				} else {
+			if args.Command == cliargs.LoadCommand && args.PathArgs[0] == CubesCommandStr {
+				if len(args.PathArgs) == 2 {
 					return true, nil
 				}
+				return false, fmt.Errorf("Bad syntax, usage: cubes load <my_topology>.yaml")
 			}
 			return false, nil
 		},
 		transform: func(args *cliargs.CLIArgs) bool {
 			filename := args.PathArgs[1]
-			args.PathArgs[1] = ""
+			args.PathArgs = args.PathArgs[:len(args.PathArgs) - 1]
 			//TODO: Parse YAML into JSON
+			b, err := ioutil.ReadFile(filename)
+			if err != nil {
+				return true
+			} else {
+				jsonBuff, fail := yaml.YAMLToJSON(b)
+				if fail != nil {
+					return true
+				} else {
+					args.BodyArgs["body"] = string(jsonBuff)
+				}
+			}
 			return false
 		},
 	}

@@ -436,12 +436,14 @@ func (cli *CLIArgs) GetHTTPRequest() (*httprequest.HTTPRequest, error) {
 
 	// TODO: is command == "" required?
 	if !cli.IsHelp && (cli.Command == AddCommand ||
-		cli.Command == SetCommand || cli.Command == "") {
+		cli.Command == SetCommand || cli.Command == LoadCommand || cli.Command == "") {
 		if len(cli.BodyArgs) == 1 && config.GetConfig().SingleParameterWorkaround &&
 			cli.Command == SetCommand {
 			url0, body0 := cli.buildSingleParamBody()
 			url += url0
 			body = body0
+		} else if cli.Command == LoadCommand && cli.PathArgs[0] == "cubes" {
+			body = []byte(cli.BodyArgs["body"])
 		} else {
 			body = cli.buildBody()
 		}
