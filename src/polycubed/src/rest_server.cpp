@@ -438,11 +438,18 @@ void RestServer::post_cubes(const Pistache::Rest::Request &request,
     json j = json::parse(request.body());
     logJson(j);
     std::vector<Response> resp = {{ErrorTag::kNoContent, nullptr}};
+    bool error = false;
     for (auto &it : j) {
       resp = core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
               ->CreateReplaceUpdate(it["name"], it, false, true);
+      if (!error && resp[0].error_tag != kCreated) {
+        Rest::Server::ResponseGenerator::Generate(std::move(resp), std::move(response));
+        error = true;
+      }
     }
-    Rest::Server::ResponseGenerator::Generate(std::move(resp), std::move(response));
+    if (!error) {
+      Rest::Server::ResponseGenerator::Generate(std::move(resp), std::move(response));
+    }
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
     response.send(Pistache::Http::Code::Bad_Request, e.what());
