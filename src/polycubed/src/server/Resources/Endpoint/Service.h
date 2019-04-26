@@ -56,9 +56,8 @@ class Service : public ParentResource, public Body::Service {
 
   virtual Response ReadHelp() = 0;
 
-  void CreateReplaceUpdate(const std::string &name, nlohmann::json &body,
-                           ResponseWriter response, bool replace,
-                           bool initialization);
+  std::vector<Response> CreateReplaceUpdate(const std::string &name, nlohmann::json &body,
+                                            bool update, bool initialization);
 
  private:
   const std::string body_rest_endpoint_;
