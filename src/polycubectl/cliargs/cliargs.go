@@ -221,7 +221,7 @@ func ParseCLIArgs(args []string) (*CLIArgs, error) {
 						arg, showTypeStr)
 				}
 
-				if command != ShowCommand {
+				if command != ShowCommand && arg != ShowYaml && arg != ShowJson {
 					return nil, fmt.Errorf("%s can only be used with %s command",
 						arg, ShowCommand)
 				}
@@ -442,7 +442,9 @@ func (cli *CLIArgs) GetHTTPRequest() (*httprequest.HTTPRequest, error) {
 			url0, body0 := cli.buildSingleParamBody()
 			url += url0
 			body = body0
-		} else if cli.Command == LoadCommand && cli.PathArgs[0] == "cubes" {
+		} else if (cli.Command == LoadCommand && cli.PathArgs[0] == "cubes") ||
+			cli.Command == AddCommand &&
+				(cli.ShowType == ShowTypeJson || cli.ShowType == ShowTypeYaml) {
 			body = []byte(cli.BodyArgs["body"])
 		} else {
 			body = cli.buildBody()

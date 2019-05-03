@@ -18,6 +18,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"bufio"
+	"bytes"
 	"io/ioutil"
 	"github.com/ghodss/yaml"
 	//"reflect"
@@ -171,6 +174,40 @@ func FillAliases() {
 		},
 	}
 	Aliases = append(Aliases, cubes_load_alias)
+
+	//config load from stdin
+	configfile_stdin_alias := Alias {
+		match: func(args *cliargs.CLIArgs) (bool, error) {
+
+			if args.Command == cliargs.AddCommand &&
+					(args.ShowType == cliargs.ShowTypeJson || args.ShowType == cliargs.ShowTypeYaml) {
+				return true, nil
+			}
+			return false, nil
+		},
+		transform: func(args *cliargs.CLIArgs) bool {
+			reader := bufio.NewReader(os.Stdin)
+			var buffer bytes.Buffer
+			text, _ := reader.ReadString('\n')
+			for text != "" {
+				buffer.WriteString(text)
+				text, _ = reader.ReadString('\n')
+			}
+			
+			if args.ShowType == cliargs.ShowTypeJson {
+				args.BodyArgs["body"] = buffer.String()
+			} else {
+				jsonBuff, fail := yaml.YAMLToJSON(buffer.Bytes())
+				if fail != nil {
+					return true
+				} else {
+					args.BodyArgs["body"] = string(jsonBuff)
+				}
+			}
+			return false
+		},
+	}
+	Aliases = append(Aliases, configfile_stdin_alias)
 
 	// topology -> topology show -verbose -hide=uuid
 	topology_alias := Alias {
