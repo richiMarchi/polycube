@@ -41,7 +41,6 @@ const (
 	ShowCommand = "show"
 	DelCommand  = "del"
 	SetCommand  = "set"
-	LoadCommand = "load"
 
 	ShowNormal  = "-normal"
 	ShowBrief   = "-brief"
@@ -119,8 +118,7 @@ type CLIArgs struct {
 
 func argIsCommand(arg string) bool {
 	return arg == AddCommand || arg == SetCommand ||
-		arg == ShowCommand || arg == DelCommand ||
-		arg == LoadCommand
+		arg == ShowCommand || arg == DelCommand
 }
 
 func argIsBodyArg(arg string) bool {
@@ -398,7 +396,7 @@ func (cli *CLIArgs) buildSingleParamBody() (string, []byte) {
 func (cli *CLIArgs) getRequestMethod() string {
 	if cli.IsHelp {
 		return httprequest.OptionsStr
-	} else if cli.Command == AddCommand || cli.Command == "" || cli.Command == LoadCommand {
+	} else if cli.Command == AddCommand || cli.Command == "" {
 		return httprequest.PostStr
 	} else if cli.Command == SetCommand {
 		if config.GetConfig().Version == "1" {
@@ -436,15 +434,13 @@ func (cli *CLIArgs) GetHTTPRequest() (*httprequest.HTTPRequest, error) {
 
 	// TODO: is command == "" required?
 	if !cli.IsHelp && (cli.Command == AddCommand ||
-		cli.Command == SetCommand || cli.Command == LoadCommand || cli.Command == "") {
+		cli.Command == SetCommand || cli.Command == "") {
 		if len(cli.BodyArgs) == 1 && config.GetConfig().SingleParameterWorkaround &&
 			cli.Command == SetCommand {
 			url0, body0 := cli.buildSingleParamBody()
 			url += url0
 			body = body0
-		} else if (cli.Command == LoadCommand && cli.PathArgs[0] == "cubes") ||
-			cli.Command == AddCommand &&
-				(cli.ShowType == ShowTypeJson || cli.ShowType == ShowTypeYaml) {
+		} else if cli.Command == AddCommand && cli.PathArgs[0] == "cubes" {
 			body = []byte(cli.BodyArgs["body"])
 		} else {
 			body = cli.buildBody()

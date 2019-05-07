@@ -21,7 +21,6 @@ import (
 	"os"
 	"bufio"
 	"bytes"
-	"io/ioutil"
 	"github.com/ghodss/yaml"
 	//"reflect"
 	"github.com/polycube-network/polycube/src/polycubectl/cliargs"
@@ -143,44 +142,11 @@ func FillAliases() {
 	}
 	Aliases = append(Aliases, cubes_alias)
 
-	//cubes load -> load cubes from YAML file
-	cubes_load_alias := Alias {
-		match: func(args *cliargs.CLIArgs) (bool, error) {
-
-			if args.Command == cliargs.LoadCommand && args.PathArgs[0] == CubesCommandStr {
-				if len(args.PathArgs) == 2 {
-					return true, nil
-				}
-				return false, fmt.Errorf("Bad syntax, usage: cubes load <my_topology>.yaml")
-			}
-			return false, nil
-		},
-		transform: func(args *cliargs.CLIArgs) bool {
-			filename := args.PathArgs[1]
-			args.PathArgs = args.PathArgs[:len(args.PathArgs) - 1]
-			//TODO: Parse YAML into JSON
-			b, err := ioutil.ReadFile(filename)
-			if err != nil {
-				return true
-			} else {
-				jsonBuff, fail := yaml.YAMLToJSON(b)
-				if fail != nil {
-					return true
-				} else {
-					args.BodyArgs["body"] = string(jsonBuff)
-				}
-			}
-			return false
-		},
-	}
-	Aliases = append(Aliases, cubes_load_alias)
-
 	//config load from stdin
 	configfile_stdin_alias := Alias {
 		match: func(args *cliargs.CLIArgs) (bool, error) {
 
-			if args.Command == cliargs.AddCommand &&
-					(args.ShowType == cliargs.ShowTypeJson || args.ShowType == cliargs.ShowTypeYaml) {
+			if args.Command == cliargs.AddCommand && args.PathArgs[0] == "cubes" {
 				return true, nil
 			}
 			return false, nil
@@ -193,16 +159,11 @@ func FillAliases() {
 				buffer.WriteString(text)
 				text, _ = reader.ReadString('\n')
 			}
-			
-			if args.ShowType == cliargs.ShowTypeJson {
-				args.BodyArgs["body"] = buffer.String()
+			jsonBuff, fail := yaml.YAMLToJSON(buffer.Bytes())
+			if fail != nil {
+				return true
 			} else {
-				jsonBuff, fail := yaml.YAMLToJSON(buffer.Bytes())
-				if fail != nil {
-					return true
-				} else {
-					args.BodyArgs["body"] = string(jsonBuff)
-				}
+				args.BodyArgs["body"] = string(jsonBuff)
 			}
 			return false
 		},
