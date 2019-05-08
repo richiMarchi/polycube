@@ -175,6 +175,7 @@ void ListResource::CreateReplaceUpdateWhole(
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
+  SaveToFile(core_->get_cubes());
 }
 
 void ListResource::get_multiple(const Request &request,
@@ -230,6 +231,7 @@ void ListResource::del_multiple(const Request &request,
     errors.push_back(DeleteWhole(cube_name, keys));
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
+  SaveToFile(core_->get_cubes());
 }
 
 void ListResource::options_multiple(const Request &request,

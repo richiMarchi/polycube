@@ -126,6 +126,7 @@ void ParentResource::CreateReplaceUpdate(
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
+  SaveToFile(core_->get_cubes());
 }
 
 std::vector<Response> ParentResource::RequestValidate(
@@ -211,6 +212,7 @@ void ParentResource::del(const Request &request, ResponseWriter response) {
     Server::ResponseGenerator::Generate(std::vector<Response>{resp},
                                         std::move(response));
   }
+  SaveToFile(core_->get_cubes());
 }
 
 void ParentResource::options(const Request &request, ResponseWriter response) {
