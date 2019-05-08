@@ -16,6 +16,9 @@
 #include "Resource.h"
 
 #include <string>
+#include <fstream>
+
+#define SAVE_PATH "/etc/polycube/cubes.yaml"
 
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
@@ -33,4 +36,24 @@ Operation Resource::OperationType(bool update, bool initialization) {
     }
   }
 }
+
+void Resource::SaveToFile(std::string cubes) {
+  std::ofstream myFile (SAVE_PATH);
+  if (myFile.is_open()) {
+    nlohmann::json j = nlohmann::json::parse(cubes);
+    nlohmann::json toDump = nlohmann::json::array();
+    for (auto &service : j) {
+      for (auto &cube : service) {
+        cube.erase("uuid");
+        toDump += cube;
+      }
+    }
+    myFile << toDump.dump(2);
+    myFile.close();
+    return true;
+  } else {
+    return false;
+  }
+}
+
 }  // namespace polycube::polycubed::Rest::Resources::Endpoint
