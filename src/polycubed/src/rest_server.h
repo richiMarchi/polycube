@@ -50,6 +50,8 @@ class RestServer {
 
   std::shared_ptr<Pistache::Rest::Router> get_router();
 
+  std::string getLastTopologyPath();
+
   const std::string base = "/polycube/v1/";
 
   void init(size_t thr = 1, const std::string &server_cert = "",
@@ -60,6 +62,7 @@ class RestServer {
 
   void start();
   void shutdown();
+  void load_last_topology();
 
  private:
   void setup_routes();
@@ -85,8 +88,8 @@ class RestServer {
   void get_cube(const Pistache::Rest::Request &request,
                 Pistache::Http::ResponseWriter response);
 
-    void post_cubes(const Pistache::Rest::Request &request,
-                       Pistache::Http::ResponseWriter response);
+  void post_cubes(const Pistache::Rest::Request &request,
+                     Pistache::Http::ResponseWriter response);
 
   void cubes_help(const Pistache::Rest::Request &request,
                   Pistache::Http::ResponseWriter response);

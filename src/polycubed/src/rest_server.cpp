@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "polycubed_core.h"
 #include "service_controller.h"
@@ -25,6 +26,8 @@
 #include "polycube/services/response.h"
 #include "server/Resources/Data/AbstractFactory.h"
 #include "server/Server/ResponseGenerator.h"
+
+#define LASTTOPOLOGYPATH "/etc/polycube/cubes.yaml"
 
 namespace polycube {
 namespace polycubed {
@@ -44,6 +47,10 @@ RestServer::RestServer(Pistache::Address addr, PolycubedCore &core)
 
 std::shared_ptr<Pistache::Rest::Router> RestServer::get_router() {
   return router_;
+}
+
+std::string RestServer::getLastTopologyPath() {
+  return LASTTOPOLOGYPATH;
 }
 
 static X509_STORE_CTX *load_certificates(const char *path) {
@@ -148,6 +155,21 @@ void RestServer::shutdown() {
     httpEndpoint_->shutdown();
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
+  }
+}
+
+void RestServer::load_last_topology() {
+  std::ifstream myFile (LASTTOPOLOGYPATH);
+  if (myFile.is_open()) {
+    std::stringstream buffer;
+    buffer << myFile.rdbuf();
+    json j = json::parse(buffer.str());
+    logJson(j);
+    for (auto &it : j) {
+      core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
+              ->CreateReplaceUpdate(it["name"], it, false, true);
+    }
+    myFile.close();
   }
 }
 

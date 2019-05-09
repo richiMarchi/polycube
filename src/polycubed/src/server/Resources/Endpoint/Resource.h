@@ -59,6 +59,6 @@ class Resource {
   virtual void Keys(const Pistache::Rest::Request &request,
                     ListKeyValues &parsed) const = 0;
 
-  static void SaveToFile(std::string cubes);
+  static void SaveToFile(std::string cubes, std::string path);
 };
 }  // namespace polycube::polycubed::Rest::Resources::Endpoint

@@ -261,6 +261,9 @@ int main(int argc, char *argv[]) {
   // register services that are shipped with polycube
   load_services(*core);
 
+  // load the last topology created
+  restserver->load_last_topology();
+
   // pause the execution of current thread until ctrl+c
   pause();
 

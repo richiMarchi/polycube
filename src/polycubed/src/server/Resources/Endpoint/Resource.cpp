@@ -18,8 +18,6 @@
 #include <string>
 #include <fstream>
 
-#define SAVE_PATH "/etc/polycube/cubes.yaml"
-
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
 Resource::Resource(const std::string &rest_endpoint)
@@ -37,8 +35,8 @@ Operation Resource::OperationType(bool update, bool initialization) {
   }
 }
 
-void Resource::SaveToFile(std::string cubes) {
-  std::ofstream myFile (SAVE_PATH);
+void Resource::SaveToFile(std::string cubes, std::string path) {
+  std::ofstream myFile (path);
   if (myFile.is_open()) {
     nlohmann::json j = nlohmann::json::parse(cubes);
     nlohmann::json toDump = nlohmann::json::array();
