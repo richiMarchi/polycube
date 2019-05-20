@@ -38,7 +38,9 @@ namespace configuration {
 #define LOGFILE "/var/log/polycube/polycubed.log"
 #define CONFIGFILEDIR "/etc/polycube"
 #define CONFIGFILENAME "polycubed.conf"
+#define LASTTOPOLOGYFILENAME "cubes.yaml"
 #define CONFIGFILE (CONFIGFILEDIR "/" CONFIGFILENAME)
+#define LASTTOPOLOGYPATH (CONFIGFILEDIR "/" LASTTOPOLOGYFILENAME)
 
 static void show_usage(const std::string &name) {
   std::cout << std::boolalpha;
@@ -63,6 +65,8 @@ static void show_usage(const std::string &name) {
   std::cout << "--pidfile: file to save polycubed pid (default: " << PIDFILE
             << ")" << std::endl;
   std::cout << "--configfile: configuration file (default: " << CONFIGFILE
+            << ")" << std::endl;
+  std::cout << "--cubes-file: file to save last topology (default: " << LASTTOPOLOGYPATH
             << ")" << std::endl;
   std::cout << "--cert-blacklist: path to black listed certificates"
             << std::endl;
@@ -95,7 +99,8 @@ Config::Config()
       server_port(SERVER_PORT),
       server_ip(SERVER_IP),
       logfile(LOGFILE),
-      configfile(CONFIGFILE) {}
+      configfile(CONFIGFILE),
+      cubes_file(LASTTOPOLOGYPATH){}
 
 Config::~Config() {}
 
@@ -180,6 +185,15 @@ void Config::setLogFile(const std::string &value) {
   logfile = value;
 }
 
+std::string Config::getLastTopologyPathFile() const {
+  return cubes_file;
+}
+
+void Config::setLastTopologyPathFile(const std::string &value) {
+  CHECK_OVERWRITE("cubes-file", value, cubes_file, LASTTOPOLOGYPATH);
+  cubes_file = value;
+}
+
 std::string Config::getCertPath() const {
   return cert_path;
 }
@@ -246,6 +260,8 @@ void Config::create_configuration_file(const std::string &path) {
   file << "addr: " << server_ip << std::endl;
   file << "# file to save polycube logs" << std::endl;
   file << "logfile: " << logfile << std::endl;
+  file << "# file to save last topology" << std::endl;
+  file << "cubes-file: " << cubes_file << std::endl;
   file << "# Security related:" << std::endl;
   file << "# server certificate " << std::endl;
   file << "#cert: path_to_certificate_file" << std::endl;
@@ -270,6 +286,7 @@ void Config::dump() {
   logger->info(" port: {}", server_port);
   logger->info(" addr: {}", server_ip);
   logger->info(" logfile: {}", logfile);
+  logger->info(" cubes-file: {}", cubes_file);
   if (!cert_path.empty()) {
     logger->info(" cert: {}", cert_path);
   }
@@ -363,6 +380,7 @@ static struct option options[] = {
     {"cacert", required_argument, NULL, 5},
     {"cert-whitelist", required_argument, NULL, 6},
     {"cert-blacklist", required_argument, NULL, 7},
+    {"cubes-file", required_argument, NULL, 8},
     {NULL, 0, NULL, 0},
 };
 
@@ -407,6 +425,9 @@ void Config::load_from_cli(int argc, char *argv[]) {
       break;
     case 7:
       setCertBlacklistPath(optarg);
+      break;
+    case 8:
+      setLastTopologyPathFile(optarg);
       break;
     }
   }

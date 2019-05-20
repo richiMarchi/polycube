@@ -26,8 +26,7 @@
 #include "polycube/services/response.h"
 #include "server/Resources/Data/AbstractFactory.h"
 #include "server/Server/ResponseGenerator.h"
-
-#define LASTTOPOLOGYPATH "/etc/polycube/cubes.yaml"
+#include "config.h"
 
 namespace polycube {
 namespace polycubed {
@@ -50,7 +49,7 @@ std::shared_ptr<Pistache::Rest::Router> RestServer::get_router() {
 }
 
 std::string RestServer::get_last_topology_path() {
-  return LASTTOPOLOGYPATH;
+  return configuration::config.getLastTopologyPathFile();
 }
 
 static X509_STORE_CTX *load_certificates(const char *path) {
@@ -159,17 +158,29 @@ void RestServer::shutdown() {
 }
 
 void RestServer::load_last_topology() {
-  std::ifstream myFile (LASTTOPOLOGYPATH);
+  std::ifstream myFile (get_last_topology_path());
   if (myFile.is_open()) {
     std::stringstream buffer;
     buffer << myFile.rdbuf();
+    myFile.close();
     json j = json::parse(buffer.str());
     logJson(j);
+    std::vector<Response> resp = {{ErrorTag::kNoContent, nullptr}};
+    bool error = false;
     for (auto &it : j) {
-      core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
+      resp = core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
               ->CreateReplaceUpdate(it["name"], it, false, true);
+      if (!error && resp[0].error_tag != kCreated) {
+        error = true;
+      }
     }
-    myFile.close();
+    if (error) {
+      std::ofstream rewrite (get_last_topology_path());
+      if (rewrite.is_open()) {
+        rewrite << buffer.str();
+        rewrite.close();
+      }
+    }
   }
 }
 

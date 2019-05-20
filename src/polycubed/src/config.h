@@ -53,6 +53,10 @@ class Config {
   std::string getLogFile() const;
   void setLogFile(const std::string &value);
 
+  // file where last topology is saved
+  std::string getLastTopologyPathFile() const;
+  void setLastTopologyPathFile(const std::string &value);
+
   // path of certificate & key to be used in server
   std::string getCertPath() const;
   void setCertPath(const std::string &value);
@@ -85,6 +89,7 @@ class Config {
   std::string server_ip;
   std::string logfile;
   std::string configfile;
+  std::string cubes_file;
   std::string cert_path, key_path;
   std::string cacert_path;
   std::string cert_whitelist_path;
