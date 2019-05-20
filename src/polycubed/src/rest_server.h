@@ -50,7 +50,7 @@ class RestServer {
 
   std::shared_ptr<Pistache::Rest::Router> get_router();
 
-  std::string getLastTopologyPath();
+  std::string get_last_topology_path();
 
   const std::string base = "/polycube/v1/";
 

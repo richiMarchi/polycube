@@ -49,7 +49,7 @@ std::shared_ptr<Pistache::Rest::Router> RestServer::get_router() {
   return router_;
 }
 
-std::string RestServer::getLastTopologyPath() {
+std::string RestServer::get_last_topology_path() {
   return LASTTOPOLOGYPATH;
 }
 
