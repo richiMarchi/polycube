@@ -88,7 +88,7 @@ Service::CreateReplaceUpdate(const std::string &name, nlohmann::json &body, bool
                     resp.error_tag == ErrorTag::kNoContent)) {
       cube_names_.AddValue(name);
     }
-    SaveToFile(core_->get_cubes(), core_->get_rest_server()->get_last_topology_path());
+    std::thread(SaveToFile, core_->get_cubes(), core_->get_rest_server()->get_last_topology_path(), false).detach();
     return std::vector<Response>{resp};
   } else {
     return std::vector<Response>{{ErrorTag::kDataExists, nullptr}};
@@ -188,7 +188,7 @@ void Service::del(const Pistache::Rest::Request &request,
   auto res = DeleteValue(name, k);
   Server::ResponseGenerator::Generate(std::vector<Response>{res},
                                       std::move(response));
-  SaveToFile(core_->get_cubes(), core_->get_rest_server()->get_last_topology_path());
+  std::thread(SaveToFile, core_->get_cubes(), core_->get_rest_server()->get_last_topology_path(), false).detach();
 }
 
 void Service::patch_body(const Request &request, ResponseWriter response) {

@@ -20,6 +20,8 @@
 
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
+  std::mutex Resource::mutex;
+
 Resource::Resource(const std::string &rest_endpoint)
     : rest_endpoint_{rest_endpoint} {}
 
@@ -35,20 +37,26 @@ Operation Resource::OperationType(bool update, bool initialization) {
   }
 }
 
-void Resource::SaveToFile(std::string cubes, std::string path) {
+void Resource::SaveToFile(std::string cubes, std::string path, bool startup) {
+  mutex.lock();
   std::ofstream myFile (path);
   if (myFile.is_open()) {
-    nlohmann::json j = nlohmann::json::parse(cubes);
-    nlohmann::json toDump = nlohmann::json::array();
-    for (auto &service : j) {
-      for (auto &cube : service) {
-        cube.erase("uuid");
-        toDump += cube;
+    if (startup) {
+      myFile << cubes;
+    } else {
+      nlohmann::json j = nlohmann::json::parse(cubes);
+      nlohmann::json toDump = nlohmann::json::array();
+      for (auto &service : j) {
+        for (auto &cube : service) {
+          cube.erase("uuid");
+          toDump += cube;
+        }
       }
+      myFile << toDump.dump(2);
     }
-    myFile << toDump.dump(2);
     myFile.close();
   }
+  mutex.unlock();
 }
 
 }  // namespace polycube::polycubed::Rest::Resources::Endpoint

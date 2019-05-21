@@ -158,7 +158,7 @@ void RestServer::shutdown() {
 }
 
 void RestServer::load_last_topology() {
-  std::ifstream myFile (get_last_topology_path());
+  std::ifstream myFile(get_last_topology_path());
   if (myFile.is_open()) {
     std::stringstream buffer;
     buffer << myFile.rdbuf();
@@ -175,11 +175,7 @@ void RestServer::load_last_topology() {
       }
     }
     if (error) {
-      std::ofstream rewrite (get_last_topology_path());
-      if (rewrite.is_open()) {
-        rewrite << buffer.str();
-        rewrite.close();
-      }
+      std::thread(Rest::Resources::Endpoint::Resource::SaveToFile, buffer.str(), get_last_topology_path(), true).detach();
     }
   }
 }

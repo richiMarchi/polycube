@@ -29,6 +29,7 @@ namespace polycube::polycubed::Rest::Resources::Endpoint {
 enum class Operation { kCreate, kReplace, kUpdate };
 
 class Resource {
+  static std::mutex mutex;
  public:
   explicit Resource(const std::string &rest_endpoint);
 
@@ -47,6 +48,8 @@ class Resource {
                               const ListKeyValues &keys,
                               Operation operation) = 0;
 
+  static void SaveToFile(std::string cubes, std::string path, bool startup);
+
  protected:
   const std::string rest_endpoint_;
 
@@ -58,7 +61,5 @@ class Resource {
 
   virtual void Keys(const Pistache::Rest::Request &request,
                     ListKeyValues &parsed) const = 0;
-
-  static void SaveToFile(std::string cubes, std::string path);
 };
 }  // namespace polycube::polycubed::Rest::Resources::Endpoint
