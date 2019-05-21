@@ -37,23 +37,19 @@ Operation Resource::OperationType(bool update, bool initialization) {
   }
 }
 
-void Resource::SaveToFile(std::string cubes, std::string path, bool startup) {
+void Resource::SaveToFile(std::string cubes, std::string path) {
   mutex.lock();
-  std::ofstream myFile (path);
+  std::ofstream myFile(path);
   if (myFile.is_open()) {
-    if (startup) {
-      myFile << cubes;
-    } else {
-      nlohmann::json j = nlohmann::json::parse(cubes);
-      nlohmann::json toDump = nlohmann::json::array();
-      for (auto &service : j) {
-        for (auto &cube : service) {
-          cube.erase("uuid");
-          toDump += cube;
-        }
+    nlohmann::json j = nlohmann::json::parse(cubes);
+    nlohmann::json toDump = nlohmann::json::array();
+    for (auto &service : j) {
+      for (auto &cube : service) {
+        cube.erase("uuid");
+        toDump += cube;
       }
-      myFile << toDump.dump(2);
     }
+    myFile << toDump.dump(2);
     myFile.close();
   }
   mutex.unlock();

@@ -48,7 +48,7 @@ class Resource {
                               const ListKeyValues &keys,
                               Operation operation) = 0;
 
-  static void SaveToFile(std::string cubes, std::string path, bool startup);
+  static void SaveToFile(std::string cubes, std::string path);
 
  protected:
   const std::string rest_endpoint_;

@@ -33,6 +33,7 @@ namespace polycubed {
 
 std::string RestServer::whitelist_cert_path;
 std::string RestServer::blacklist_cert_path;
+bool RestServer::startup;
 
 // start http server for Management APIs
 // Incapsultate a core object // TODO probably there are best ways...
@@ -158,6 +159,7 @@ void RestServer::shutdown() {
 }
 
 void RestServer::load_last_topology() {
+  startup = true;
   std::ifstream myFile(get_last_topology_path());
   if (myFile.is_open()) {
     std::stringstream buffer;
@@ -165,19 +167,12 @@ void RestServer::load_last_topology() {
     myFile.close();
     json j = json::parse(buffer.str());
     logJson(j);
-    std::vector<Response> resp = {{ErrorTag::kNoContent, nullptr}};
-    bool error = false;
     for (auto &it : j) {
-      resp = core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
+      core.get_service_controller(it["service-name"]).get_management_interface()->get_service()
               ->CreateReplaceUpdate(it["name"], it, false, true);
-      if (!error && resp[0].error_tag != kCreated) {
-        error = true;
-      }
-    }
-    if (error) {
-      std::thread(Rest::Resources::Endpoint::Resource::SaveToFile, buffer.str(), get_last_topology_path(), true).detach();
     }
   }
+  startup = false;
 }
 
 void RestServer::setup_routes() {

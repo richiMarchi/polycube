@@ -54,6 +54,8 @@ class RestServer {
 
   const std::string base = "/polycube/v1/";
 
+  static bool startup;
+
   void init(size_t thr = 1, const std::string &server_cert = "",
             const std::string &server_key = "",
             const std::string &root_ca_cert = "",
