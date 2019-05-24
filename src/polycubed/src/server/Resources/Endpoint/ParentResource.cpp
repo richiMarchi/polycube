@@ -126,7 +126,11 @@ void ParentResource::CreateReplaceUpdate(
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
-  std::thread(SaveToFile, core_->get_cubes(), core_->get_rest_server()->get_last_topology_path()).detach();
+  try {
+    UpdateCubesConfig(cube_name, core_->get_cube(cube_name), false);
+  } catch (std::runtime_error &e) {
+    // Cube not present.
+  }
 }
 
 std::vector<Response> ParentResource::RequestValidate(
@@ -212,7 +216,7 @@ void ParentResource::del(const Request &request, ResponseWriter response) {
     Server::ResponseGenerator::Generate(std::vector<Response>{resp},
                                         std::move(response));
   }
-  std::thread(SaveToFile, core_->get_cubes(), core_->get_rest_server()->get_last_topology_path()).detach();
+  UpdateCubesConfig(cube_name, "", true);
 }
 
 void ParentResource::options(const Request &request, ResponseWriter response) {

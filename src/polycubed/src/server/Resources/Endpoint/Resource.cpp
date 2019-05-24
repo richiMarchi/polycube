@@ -1,3 +1,7 @@
+#include <utility>
+
+#include <utility>
+
 /*
  * Copyright 2018 The Polycube Authors
  *
@@ -17,10 +21,15 @@
 
 #include <string>
 #include <fstream>
+#include <rest_server.h>
+#include <config.h>
 
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
   std::mutex Resource::mutex;
+  std::map<std::string, std::string> Resource::cubesConfig;
+  std::condition_variable Resource::data_cond;
+  bool Resource::kill = false;
 
 Resource::Resource(const std::string &rest_endpoint)
     : rest_endpoint_{rest_endpoint} {}
@@ -37,22 +46,35 @@ Operation Resource::OperationType(bool update, bool initialization) {
   }
 }
 
-void Resource::SaveToFile(std::string cubes, std::string path) {
-  mutex.lock();
-  std::ofstream myFile(path);
-  if (myFile.is_open()) {
-    nlohmann::json j = nlohmann::json::parse(cubes);
-    nlohmann::json toDump = nlohmann::json::array();
-    for (auto &service : j) {
-      for (auto &cube : service) {
+void Resource::UpdateCubesConfig(const std::string& cubeName, std::string cube, bool remove) {
+  if (remove)
+    cubesConfig.erase(cubeName);
+  else
+    cubesConfig[cubeName] = cube;
+  if (!RestServer::startup)
+    data_cond.notify_one();
+}
+
+void Resource::SaveToFile(const std::string& path) {
+  while (true) {
+    std::unique_lock<std::mutex> uniqueLock(mutex);
+    data_cond.wait(uniqueLock);
+    if (kill)
+      break;
+    std::ofstream myFile(path);
+    if (myFile.is_open()) {
+      nlohmann::json toDump = nlohmann::json::array();
+      nlohmann::json cube;
+      for (const auto &elem : cubesConfig) {
+        cube = nlohmann::json::parse(elem.second);
         cube.erase("uuid");
         toDump += cube;
       }
+      myFile << toDump.dump(2);
+      myFile.close();
     }
-    myFile << toDump.dump(2);
-    myFile.close();
+    uniqueLock.unlock();
   }
-  mutex.unlock();
 }
 
 }  // namespace polycube::polycubed::Rest::Resources::Endpoint

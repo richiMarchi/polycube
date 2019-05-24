@@ -30,7 +30,12 @@ enum class Operation { kCreate, kReplace, kUpdate };
 
 class Resource {
   static std::mutex mutex;
+  static std::map<std::string, std::string> cubesConfig;
+
  public:
+  static std::condition_variable data_cond;
+  static bool kill;
+
   explicit Resource(const std::string &rest_endpoint);
 
   virtual ~Resource() = default;
@@ -48,7 +53,8 @@ class Resource {
                               const ListKeyValues &keys,
                               Operation operation) = 0;
 
-  static void SaveToFile(std::string cubes, std::string path);
+  static void UpdateCubesConfig(const std::string& cubeName, std::string cube, bool remove);
+  static void SaveToFile(const std::string& path);
 
  protected:
   const std::string rest_endpoint_;

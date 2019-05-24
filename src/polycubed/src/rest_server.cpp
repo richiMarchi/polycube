@@ -156,6 +156,8 @@ void RestServer::shutdown() {
   } catch (const std::runtime_error &e) {
     logger->error("{0}", e.what());
   }
+  Rest::Resources::Endpoint::Resource::kill = true;
+  Rest::Resources::Endpoint::Resource::data_cond.notify_one();
 }
 
 void RestServer::load_last_topology() {
@@ -173,6 +175,8 @@ void RestServer::load_last_topology() {
     }
   }
   startup = false;
+  // Start saving thread
+  std::thread(Rest::Resources::Endpoint::Resource::SaveToFile, get_last_topology_path()).detach();
 }
 
 void RestServer::setup_routes() {
