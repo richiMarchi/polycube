@@ -121,16 +121,12 @@ void ParentResource::CreateReplaceUpdate(
     auto resp = WriteValue(cube_name, jbody, keys, op);
     if (resp.error_tag == ErrorTag::kOk) {
       errors.push_back({ErrorTag::kCreated, nullptr});
+      UpdateCubesConfig(this->name_, cube_name, jbody, op);
     } else {
       errors.push_back(resp);
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
-  try {
-    UpdateCubesConfig(cube_name, core_->get_cube(cube_name), false);
-  } catch (std::runtime_error &e) {
-    // Cube not present.
-  }
 }
 
 std::vector<Response> ParentResource::RequestValidate(
@@ -212,11 +208,11 @@ void ParentResource::del(const Request &request, ResponseWriter response) {
         std::vector<Response>{{ErrorTag::kNoContent, nullptr}},
         std::move(response));
     errors.push_back({ErrorTag::kCreated, nullptr});
+    UpdateCubesConfig(this->name_, cube_name, nullptr, Operation::kDelete);
   } else {
     Server::ResponseGenerator::Generate(std::vector<Response>{resp},
                                         std::move(response));
   }
-  UpdateCubesConfig(cube_name, "", true);
 }
 
 void ParentResource::options(const Request &request, ResponseWriter response) {

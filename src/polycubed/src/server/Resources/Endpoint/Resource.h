@@ -26,11 +26,12 @@
 
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
-enum class Operation { kCreate, kReplace, kUpdate };
+enum class Operation { kCreate, kReplace, kUpdate, kDelete };
 
 class Resource {
   static std::mutex mutex;
-  static std::map<std::string, std::string> cubesConfig;
+  static std::map<std::string, nlohmann::json> cubesConfig;
+  static std::atomic<int> toSave;
 
  public:
   static std::condition_variable data_cond;
@@ -53,7 +54,10 @@ class Resource {
                               const ListKeyValues &keys,
                               Operation operation) = 0;
 
-  static void UpdateCubesConfig(const std::string& cubeName, std::string cube, bool remove);
+  static void UpdateCubesConfig(const std::string& serviceName,
+                                const std::string& cubeName,
+                                nlohmann::json body,
+                                Operation opType);
   static void SaveToFile(const std::string& path);
 
  protected:

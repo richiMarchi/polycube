@@ -170,11 +170,7 @@ void ListResource::CreateReplaceUpdateWhole(
     auto resp = WriteWhole(cube_name, jbody, keys, op);
     if (resp.error_tag == ErrorTag::kOk) {
       errors.push_back({ErrorTag::kCreated, nullptr});
-      try {
-        UpdateCubesConfig(cube_name, core_->get_cube(cube_name), false);
-      } catch (std::runtime_error &e) {
-        // Cube not present.
-      }
+      UpdateCubesConfig(this->name_, cube_name, jbody, op);
     } else {
       errors.push_back(resp);
     }
@@ -233,7 +229,7 @@ void ListResource::del_multiple(const Request &request,
     ListKeyValues keys{};
     dynamic_cast<const ParentResource *const>(parent_)->Keys(request, keys);
     errors.push_back(DeleteWhole(cube_name, keys));
-    UpdateCubesConfig(cube_name, "", true);
+    UpdateCubesConfig(this->name_, cube_name, nullptr, Operation::kDelete);
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
 }

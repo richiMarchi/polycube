@@ -27,9 +27,10 @@
 namespace polycube::polycubed::Rest::Resources::Endpoint {
 
   std::mutex Resource::mutex;
-  std::map<std::string, std::string> Resource::cubesConfig;
+  std::map<std::string, nlohmann::json> Resource::cubesConfig;
   std::condition_variable Resource::data_cond;
   bool Resource::kill = false;
+  std::atomic<int> Resource::toSave = 0;
 
 Resource::Resource(const std::string &rest_endpoint)
     : rest_endpoint_{rest_endpoint} {}
@@ -46,34 +47,49 @@ Operation Resource::OperationType(bool update, bool initialization) {
   }
 }
 
-void Resource::UpdateCubesConfig(const std::string& cubeName, std::string cube, bool remove) {
-  if (remove)
+void Resource::UpdateCubesConfig(const std::string& serviceName,
+                                 const std::string& cubeName,
+                                 nlohmann::json body,
+                                 Operation opType) {
+
+  std::lock_guard<std::mutex> lg(mutex);
+  if (opType == Operation::kDelete) {
     cubesConfig.erase(cubeName);
-  else
-    cubesConfig[cubeName] = cube;
-  if (!RestServer::startup)
+  } else {
+    nlohmann::json serviceField = nlohmann::json::object();
+    serviceField["service-name"] = serviceName;
+    serviceField.update(body);
+    cubesConfig[cubeName].update(serviceField);
+  }
+
+  if (!RestServer::startup) {
+    toSave++;
     data_cond.notify_one();
+  }
 }
 
 void Resource::SaveToFile(const std::string& path) {
   while (true) {
     std::unique_lock<std::mutex> uniqueLock(mutex);
-    data_cond.wait(uniqueLock);
-    if (kill)
+    if (toSave.load() == 0) {
+      data_cond.wait(uniqueLock);
+    }
+    if (kill) {
       break;
+    }
+    std::map<std::string, nlohmann::json> copyConfig(cubesConfig);
+    toSave.store(0);
+    uniqueLock.unlock();
     std::ofstream myFile(path);
     if (myFile.is_open()) {
       nlohmann::json toDump = nlohmann::json::array();
-      nlohmann::json cube;
-      for (const auto &elem : cubesConfig) {
-        cube = nlohmann::json::parse(elem.second);
-        cube.erase("uuid");
+      for (const auto &elem : copyConfig) {
+        auto cube = elem.second;
         toDump += cube;
       }
       myFile << toDump.dump(2);
       myFile.close();
     }
-    uniqueLock.unlock();
   }
 }
 
