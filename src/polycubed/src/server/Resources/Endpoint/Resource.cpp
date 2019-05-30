@@ -54,12 +54,38 @@ void Resource::UpdateCubesConfig(const std::string& serviceName,
 
   std::lock_guard<std::mutex> lg(mutex);
   if (opType == Operation::kDelete) {
-    cubesConfig.erase(cubeName);
+    if (body.empty()) {
+      cubesConfig.erase(cubeName);
+    } else {
+      for (int i = 0; i < cubesConfig[cubeName][serviceName].size(); i++) {
+        if (cubesConfig[cubeName][serviceName][i]["name"] == body["name"]) {
+          cubesConfig[cubeName][serviceName].erase(i);
+          break;
+        }
+      }
+      if (cubesConfig[cubeName][serviceName].empty()) {
+        cubesConfig[cubeName].erase(serviceName);
+      }
+    }
   } else {
-    nlohmann::json serviceField = nlohmann::json::object();
-    serviceField["service-name"] = serviceName;
-    serviceField.update(body);
-    cubesConfig[cubeName].update(serviceField);
+    if (cubesConfig.find(cubeName) == cubesConfig.end()) {
+      nlohmann::json serviceField = nlohmann::json::object();
+      serviceField["service-name"] = serviceName;
+      serviceField.update(body);
+      cubesConfig[cubeName].update(serviceField);
+    } else {
+      if (cubesConfig[cubeName].find(serviceName) == cubesConfig[cubeName].end()) {
+        nlohmann::json toUpdate = nlohmann::json::array();
+        toUpdate.push_back(body);
+        cubesConfig[cubeName][serviceName] = toUpdate;
+      } else {
+        if (cubesConfig[cubeName][serviceName].type() == nlohmann::json::value_t::array) {
+          cubesConfig[cubeName][serviceName].push_back(body);
+        } else {
+          cubesConfig[cubeName][serviceName] = body;
+        }
+      }
+    }
   }
 
   if (!RestServer::startup) {

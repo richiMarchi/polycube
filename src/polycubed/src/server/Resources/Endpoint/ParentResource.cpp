@@ -121,9 +121,13 @@ void ParentResource::CreateReplaceUpdate(
     auto resp = WriteValue(cube_name, jbody, keys, op);
     if (resp.error_tag == ErrorTag::kOk) {
       errors.push_back({ErrorTag::kCreated, nullptr});
-      UpdateCubesConfig(this->name_, cube_name, jbody, op);
     } else {
       errors.push_back(resp);
+    }
+    if (resp.error_tag == ErrorTag::kOk ||
+        resp.error_tag == ErrorTag::kCreated ||
+        resp.error_tag == ErrorTag::kNoContent) {
+      UpdateCubesConfig(this->name_, cube_name, jbody, op);
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
@@ -208,7 +212,11 @@ void ParentResource::del(const Request &request, ResponseWriter response) {
         std::vector<Response>{{ErrorTag::kNoContent, nullptr}},
         std::move(response));
     errors.push_back({ErrorTag::kCreated, nullptr});
-    UpdateCubesConfig(this->name_, cube_name, nullptr, Operation::kDelete);
+    nlohmann::json j = nlohmann::json::object();
+    for (auto &elem : keys) {
+      j["name"] = elem.value;
+    }
+    UpdateCubesConfig(this->name_, cube_name, j, Operation::kDelete);
   } else {
     Server::ResponseGenerator::Generate(std::vector<Response>{resp},
                                         std::move(response));

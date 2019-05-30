@@ -189,6 +189,10 @@ void Service::del(const Pistache::Rest::Request &request,
   auto res = DeleteValue(name, k);
   Server::ResponseGenerator::Generate(std::vector<Response>{res},
                                       std::move(response));
+  nlohmann::json j = nlohmann::json::object();
+  for (auto &elem : k) {
+    j["name"] = elem.value;
+  }
   UpdateCubesConfig(this->name_, name, nullptr, Operation::kDelete);
 }
 

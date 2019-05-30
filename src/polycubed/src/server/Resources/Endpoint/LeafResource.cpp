@@ -113,6 +113,11 @@ void LeafResource::CreateReplaceUpdate(const Pistache::Rest::Request &request,
     auto op = Operation::kUpdate;
     auto resp = WriteValue(cube_name, jbody, keys, op);
     errors.push_back(resp);
+    if (resp.error_tag == ErrorTag::kOk ||
+        resp.error_tag == ErrorTag::kCreated ||
+        resp.error_tag == ErrorTag::kNoContent) {
+      UpdateCubesConfig(this->name_, cube_name, jbody, op);
+    }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
 }
