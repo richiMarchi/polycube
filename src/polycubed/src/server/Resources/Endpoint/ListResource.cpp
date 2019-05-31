@@ -170,14 +170,13 @@ void ListResource::CreateReplaceUpdateWhole(
     auto resp = WriteWhole(cube_name, jbody, keys, op);
     if (resp.error_tag == ErrorTag::kOk) {
       errors.push_back({ErrorTag::kCreated, nullptr});
-      UpdateCubesConfig(this->name_, cube_name, jbody, op);
     } else {
       errors.push_back(resp);
     }
     if (resp.error_tag == ErrorTag::kOk ||
         resp.error_tag == ErrorTag::kCreated ||
         resp.error_tag == ErrorTag::kNoContent) {
-      UpdateCubesConfig(this->name_, cube_name, jbody, op);
+      UpdateCubesConfig(this->name_, cube_name, request.resource(), jbody, op);
     }
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
@@ -234,11 +233,7 @@ void ListResource::del_multiple(const Request &request,
     ListKeyValues keys{};
     dynamic_cast<const ParentResource *const>(parent_)->Keys(request, keys);
     errors.push_back(DeleteWhole(cube_name, keys));
-    nlohmann::json j = nlohmann::json::object();
-    for (auto &elem : keys) {
-      j["name"] = elem.value;
-    }
-    UpdateCubesConfig(this->name_, cube_name, j, Operation::kDelete);
+    UpdateCubesConfig(this->name_, cube_name, request.resource(), nullptr, Operation::kDelete);
   }
   Server::ResponseGenerator::Generate(std::move(errors), std::move(response));
 }

@@ -86,7 +86,7 @@ Service::CreateReplaceUpdate(const std::string &name, nlohmann::json &body, bool
     if (resp.error_tag == ErrorTag::kOk ||
         resp.error_tag == ErrorTag::kCreated ||
         resp.error_tag == ErrorTag::kNoContent) {
-      UpdateCubesConfig(this->name_, name, body, op);
+      UpdateCubesConfig(this->name_, name, "/polycube/v1/" + this->name_ + "/" + name + "/", body, op);
       if (!update)
         cube_names_.AddValue(name);
     }
@@ -189,11 +189,7 @@ void Service::del(const Pistache::Rest::Request &request,
   auto res = DeleteValue(name, k);
   Server::ResponseGenerator::Generate(std::vector<Response>{res},
                                       std::move(response));
-  nlohmann::json j = nlohmann::json::object();
-  for (auto &elem : k) {
-    j["name"] = elem.value;
-  }
-  UpdateCubesConfig(this->name_, name, nullptr, Operation::kDelete);
+  UpdateCubesConfig(this->name_, name, "/polycube/v1/" + this->name_ + "/" + name + "/", nullptr, Operation::kDelete);
 }
 
 void Service::patch_body(const Request &request, ResponseWriter response) {

@@ -49,42 +49,116 @@ Operation Resource::OperationType(bool update, bool initialization) {
 
 void Resource::UpdateCubesConfig(const std::string& serviceName,
                                  const std::string& cubeName,
+                                 const std::string& resource,
                                  nlohmann::json body,
                                  Operation opType) {
 
+  std::stringstream ss(resource);
+  std::vector<std::string> resItem;
+  std::string token;
+
+  while(std::getline(ss, token, '/')) {
+    resItem.push_back(token);
+  }
+
   std::lock_guard<std::mutex> lg(mutex);
-  if (opType == Operation::kDelete) {
-    if (body.empty()) {
-      cubesConfig.erase(cubeName);
-    } else {
-      for (int i = 0; i < cubesConfig[cubeName][serviceName].size(); i++) {
-        if (cubesConfig[cubeName][serviceName][i]["name"] == body["name"]) {
-          cubesConfig[cubeName][serviceName].erase(i);
-          break;
+  switch (opType) {
+    case Operation::kCreate:case Operation::kReplace: {
+      if (resItem.size() == 5) {
+        nlohmann::json serviceField = nlohmann::json::object();
+        serviceField["service-name"] = serviceName;
+        serviceField.update(body);
+        if (cubesConfig.find(cubeName) != cubesConfig.end()) {
+          cubesConfig.erase(cubeName);
         }
-      }
-      if (cubesConfig[cubeName][serviceName].empty()) {
-        cubesConfig[cubeName].erase(serviceName);
-      }
-    }
-  } else {
-    if (cubesConfig.find(cubeName) == cubesConfig.end()) {
-      nlohmann::json serviceField = nlohmann::json::object();
-      serviceField["service-name"] = serviceName;
-      serviceField.update(body);
-      cubesConfig[cubeName].update(serviceField);
-    } else {
-      if (cubesConfig[cubeName].find(serviceName) == cubesConfig[cubeName].end()) {
-        nlohmann::json toUpdate = nlohmann::json::array();
-        toUpdate.push_back(body);
-        cubesConfig[cubeName][serviceName] = toUpdate;
+        cubesConfig[cubeName].update(serviceField);
       } else {
-        if (cubesConfig[cubeName][serviceName].type() == nlohmann::json::value_t::array) {
-          cubesConfig[cubeName][serviceName].push_back(body);
-        } else {
-          cubesConfig[cubeName][serviceName] = body;
+        nlohmann::json *item = &cubesConfig[resItem[4]];
+        for (int i = 5; i < resItem.size() - 1; i++) {
+          auto *el = &item[0][resItem[i]];
+          if (el->is_null()) {
+            nlohmann::json toUpdate = nlohmann::json::array();
+            toUpdate.push_back(body);
+            item[0][resItem[i]] = toUpdate;
+            break;
+          } else if (el->is_array()) {
+            if (i == resItem.size() - 2) {
+              if (el->find(resItem[i + 1]) != el->end()) {
+                el->erase(resItem[i + 1]);
+              }
+              el[0].push_back(body);
+            } else {
+              for (int j = 0; j < el->size(); j++) {
+                if (el[0][j]["name"] == resItem[i + 1]) {
+                  el = &item[0][resItem[i]][j];
+                  i++;
+                  break;
+                }
+              }
+            }
+          } else {
+            if (i == resItem.size() - 2) {
+              item[0][resItem[i]] = body;
+            }
+          }
+          item = el;
         }
       }
+      break;
+    }
+
+    case Operation::kUpdate: {
+      nlohmann::json *item = &cubesConfig[resItem[4]];
+      for (int i = 5; i < resItem.size() - 1; i++) {
+        auto *el = &item[0][resItem[i]];
+        if (el->is_array()) {
+          for (int j = 0; j < el->size(); j++) {
+            if (el[0][j]["name"] == resItem[i + 1]) {
+              el = &item[0][resItem[i]][j];
+              i++;
+              break;
+            }
+          }
+        }
+        item = el;
+      }
+
+      item[0][resItem[resItem.size() - 1]] = body;
+      break;
+    }
+
+    case Operation::kDelete: {
+      if (resItem.size() == 5) {
+        cubesConfig.erase(cubeName);
+      } else {
+        nlohmann::json *item = &cubesConfig[resItem[4]];
+        bool deleted = false;
+        for (int i = 5; i < resItem.size() - 1; i++) {
+          auto *el = &item[0][resItem[i]];
+          if (el->is_array()) {
+            for (int j = 0; j < el->size(); j++) {
+              if (el[0][j]["name"] == resItem[i + 1]) {
+                if (i == resItem.size() - 2) {
+                  el->erase(j);
+                  deleted = true;
+                  if (el->empty()) {
+                    item->erase(resItem[i]);
+                  }
+                } else {
+                  el = &item[0][resItem[i]][i];
+                  i++;
+                }
+                break;
+              }
+            }
+          }
+          item = el;
+        }
+        if (!deleted) {
+          item->erase(resItem[resItem.size() - 1]);
+        }
+      }
+      break;
     }
   }
 

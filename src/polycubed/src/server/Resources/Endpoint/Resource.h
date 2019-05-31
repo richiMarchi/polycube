@@ -56,6 +56,7 @@ class Resource {
 
   static void UpdateCubesConfig(const std::string& serviceName,
                                 const std::string& cubeName,
+                                const std::string& resource,
                                 nlohmann::json body,
                                 Operation opType);
   static void SaveToFile(const std::string& path);
