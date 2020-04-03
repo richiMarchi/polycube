@@ -1,0 +1,68 @@
+module p4firewall {
+  yang-version 1.1;
+  namespace "http://polycube.network/p4firewall";
+  prefix "p4firewall";
+
+  import polycube-base { prefix "polycube-base"; }
+  import polycube-standard-base { prefix "polycube-standard-base"; }
+
+  import ietf-inet-types { prefix "inet"; }
+  import ietf-yang-types { prefix "yang"; }
+
+  organization "Polycube open source project";
+  description "YANG data model for the Polycube P4-firewall service";
+
+  polycube-base:service-description "P4-firewall Service";
+  polycube-base:service-version "2.0";
+  polycube-base:service-name "p4firewall";
+  polycube-base:service-min-kernel-version "4.14.0";
+
+  uses "polycube-standard-base:standard-base-yang-module";
+
+  list flow-direction {
+    key "srcInterface dstInterface";
+    leaf srcInterface {
+      type string;
+      description "In port.";
+      polycube-base:init-only-config;
+    }
+
+    leaf dstInterface {
+      type string;
+      description "Out port.";
+      polycube-base:init-only-config;
+    }
+
+    leaf direction {
+      type uint8;
+      default 1;
+      description "Inboud or outbound";
+      polycube-base:init-only-config;
+    }
+  }
+
+  list route {
+      key "address";
+      description "Entry associated with the ARP table";
+      leaf address {
+        type inet:ip-prefix;
+        mandatory true;
+        description "Destination IP address";
+        polycube-base:cli-example "123.13.34.0";
+      }
+
+      leaf mac {
+        type yang:mac-address;
+        mandatory true;
+        description "Destination MAC address";
+        polycube-base:cli-example "C5:13:2D:36:27:9B";
+      }
+
+      leaf interface {
+        type string;
+        mandatory true;
+        description "Outgoing interface";
+        polycube-base:cli-example "port2";
+      }
+    }
+}
